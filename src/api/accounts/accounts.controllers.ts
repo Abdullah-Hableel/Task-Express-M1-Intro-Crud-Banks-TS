@@ -1,55 +1,63 @@
 import { accounts } from "../../data/accounts";
 import { Request, Response } from "express";
+import Account from "../../models/Account";
 
-const getAllAccounts = (req: Request, res: Response) => {
-  return res.json(accounts);
-};
-
-const createNewAccount = (req: Request, res: Response) => {
-  console.log("🚀 ~ req.body:", req.body);
-  const { username } = req.body;
-
-  if (!username) {
-    return res.status(400).json({ error: "Username is required" });
+const getAllAccounts = async (req: Request, res: Response) => {
+  try {
+    const accounts = await Account.find();
+    res.json(accounts);
+  } catch (error) {
+    res.status(500);
   }
-
-  const newAccount = {
-    id: Date.now(),
-    username,
-    funds: 0,
-  };
-
-  accounts.push(newAccount);
-  res.status(201).json(newAccount);
 };
 
-const deleteAccount = (req: Request, res: Response) => {
+const createNewAccount = async (req: Request, res: Response) => {
+  //   console.log("🚀 ~ req.body:", req.body);
+  try {
+    const newAccount = await Account.create({
+      username: req.body.username,
+      funds: 0,
+    });
+
+    res.status(201).json(newAccount);
+  } catch (error) {
+    return res.status(500).json({ error: "Username is required" });
+
+    //      if (!username) { return res.status(500).json({ error: "Username is required" });
+
+    //   }
+  }
+};
+
+const deleteAccount = async (req: Request, res: Response) => {
+  const { accountsId } = await req.params;
+  try {
+    const findaccount = await Account.findById(accountsId);
+    if (findaccount) {
+      await findaccount.deleteOne();
+      res.status(204).end();
+    } else {
+      res.status(404).json({ massage: "Account not found" });
+    }
+  } catch (error) {
+    res.status(500);
+  }
+};
+
+const updateAccount = async (req: Request, res: Response) => {
   const { accountsId } = req.params;
-  const account = accounts.findIndex(
-    (account) => account.id === Number(accountsId)
-  );
+  try {
+    const updateaccount = await Account.findById(accountsId);
 
-  if (!account) {
-    return res.status(404).json();
+    if (updateaccount) {
+      await updateaccount.updateOne(req.body);
+      return res.status(204).end();
+    } else {
+      return res.status(404).json({ massage: "Account not found " });
+    }
+  } catch (error) {
+    res.status(500);
   }
-
-  accounts.splice(account, 1);
-
-  return res.status(204).json();
-};
-
-const updateAccount = (req: Request, res: Response) => {
-  const { accountsId } = req.params;
-  const { username, funds } = req.body;
-  const account = accounts.find((account) => account.id === Number(accountsId));
-
-  if (!account) {
-    return res.status(404).json({ error: "Account not found" });
-  }
-  if (username !== undefined) account.username = username;
-  if (funds !== undefined) account.funds = funds;
-
-  return res.status(200).json(account);
 };
 
 export { getAllAccounts, createNewAccount, deleteAccount, updateAccount };

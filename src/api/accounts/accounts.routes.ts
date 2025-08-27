@@ -7,12 +7,12 @@ import {
 } from "./accounts.controllers";
 const router = Router();
 
-router.get("/accounts", getAllAccounts);
+router.get("/", getAllAccounts);
 
-router.post("/accounts", createNewAccount);
+router.post("/", createNewAccount);
 
-router.delete("/accounts/:accountsId", deleteAccount);
+router.delete("/:accountsId", deleteAccount);
 
-router.put("/accounts/:accountsId", updateAccount);
+router.put("/:accountsId", updateAccount);
 
 export default router;
